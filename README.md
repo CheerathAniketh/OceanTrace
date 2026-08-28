@@ -85,7 +85,7 @@ npm run dev
 - Karthik Agarwal — frontend dashboard
 - Rishikesh Vonteru
 - Uddavalu Thranoop
-- Akanksha Boga Ja
+- Akanksha Boga
 - Arathi Jatoth
 
 ## Data sources
