@@ -1,27 +1,164 @@
-# OceanTrace — Architecture Notes
+# OceanTrace — Dev Log: 2026-08-28
 
-## What's real vs. simulated
-- **Detection**: REAL — classical CV (Otsu thresholding + morphological ops)
-  on actual Sentinel-1 SAR images from Zenodo. No trained model (out of scope
-  for this timeline).
-- **Drift (hindcast/forecast)**: SIMULATED — simplified vector field, not
-  live oceanographic/meteorological data. Good enough to show a plausible
-  backward/forward path.
-- **AIS attribution**: SIMULATED — synthetic vessel tracks generated around
-  the estimated origin window, since we don't have real AIS data matched to
-  a real spill event.
+## Summary
+First real work session. Repo scaffolding already existed (folders + a few
+docs). Today: locked the inter-module data contract, decided on the DL vs.
+classical detection strategy, and started the segmentation training
+pipeline in Colab. No training run completed yet — still in dataset
+inspection phase.
 
-## Module boundaries
-- `detection/` → outputs a spill polygon (lat/lon coords) + geo-bounds from
-  one SAR image.
-- `drift/` → takes the spill polygon + timestamp, outputs a backward path
-  (estimated origin point/time) and forward path (predicted spread).
-- `ais/` → takes the origin point/time window, outputs a ranked list of
-  vessels with scores (proximity, trajectory match, behavioral anomaly).
-- `pipeline/run_pipeline.py` → orchestrates all three, outputs one JSON
-  (see contract.md) for the frontend.
+## Decisions made
+- **Detection strategy**: keep classical CV (Otsu thresholding + morph ops)
+  as the reliable fallback/baseline. Build a DL segmentation model
+  alongside it, not instead of it. Pipeline can flag-switch between them.
+- **DL detection is multiclass**, not binary — matches the 5-class framing
+  (sea surface, oil spill, look-alike, ship, land) and is more defensible
+  to judges than collapsing to binary.
+- **DL/ML ownership**: solo-owned (me). Rest of team (AIS, drift, frontend)
+  stays unblocked by working against the JSON contract + stub/synthetic
+  data, not waiting on the trained model.
+- **Compute**: training on Google Colab (free T4), not the teammate's
+  4050 laptop — more VRAM, zero local setup, easier to co-view.
+- **Data contract locked** (see `docs/contract.md`): SpillDetection,
+  DriftResult, VesselRanking, and the final pipeline JSON shape. Fixed on
+  GeoJSON `[lon, lat]` coordinate order everywhere. Flagged
+  `uncertainty_radius_km` in DriftResult as the field AIS filtering depends
+  on — must not get dropped.
 
-## Decisions log
-- Aug 28: chose classical thresholding over training a model — faster,
-  lower risk, works on real images today.
-- Aug 28: repo name OceanTrace, team name Adamya.
+## Dataset search (detection training data)
+- Tried `sudhanshu2198/oil-spill-detection` (Kaggle) → wrong dataset,
+  it's binary **classification** (Class_0/Class_1 folders, plain jpgs, no
+  masks). Not usable for segmentation.
+- Tried `harikrishnacs/sentinel-1-sar-oil-spill-detection-dataset` → same
+  problem, also binary classification only, no masks.
+- **Landed on `bakhtiyar2222/deep-sar-oil-spill-segmentation-refined`**
+  (~1.1GB) → this is the right one. Clean structure:
+  `images/images/{train,val}/` and `masks/masks/{train,val}/` with matching
+  filenames (`palsar_291.png` etc). PALSAR + Sentinel-1A images, confirms
+  this is the Deep-SAR (SOS) dataset. **6,455 train masks** found.
+
+## Current blocker
+Mask format turned out to be messier than expected:
+- Masks are `RGB` mode but R=G=B (so really grayscale info stored in 3
+  channels).
+- Single-file check showed 115 unique values, not a clean 5 — looks like
+  anti-aliasing/compression noise around a small number of true class
+  anchor values, with `0` dominant and other values roughly spaced near
+  multiples of ~51 (i.e. ~255/5).
+- Started aggregating value counts across 200 masks to find the real
+  recurring anchor values before writing the class-index remapping.
+- **Hit a bug mid-check**: assumed all mask files are RGB `(H,W,3)` and
+  indexed `[:,:,0]` — some masks in the sample are actually 2D grayscale
+  `(H,W)` already (no channel dim), so indexing failed with
+  `IndexError: too many indices for array: array is 2-dimensional`.
+  **Not yet fixed.** Need to branch on `arr.ndim` before indexing.
+
+## Next session — pick up here
+1. Fix the `os.walk`/aggregation script to handle both 2D and 3D masks
+   (check `arr.ndim`, only index `[:,:,0]` if `ndim == 3`).
+2. Re-run the 200-mask aggregation to find true class anchor values.
+3. Write the snap-to-nearest-anchor remap function → clean 0–4 class index
+   masks.
+4. Write the `Dataset` class (`detection/train_segmentation_dl.ipynb`,
+   Colab) using `segmentation_models_pytorch`, U-Net + resnet18 encoder,
+   pretrained ImageNet weights, multiclass (5-class) output.
+5. Train, validate, export weights + inference function producing
+   `SpillDetection` JSON matching `docs/contract.md`.
+
+## Housekeeping
+- Kaggle API key was pasted in plaintext during setup — **should be
+  rotated/regenerated** on the Kaggle settings page before continuing, and
+  never hardcoded into a notebook cell that gets committed to the repo.
+- Notebook naming convention: `detection/test_detection.ipynb` = classical
+  CV baseline. `detection/train_segmentation_dl.ipynb` = DL training
+  (Colab). Keep both, don't merge.
+
+
+  # OceanTrace — Dev Log: 2026-09-03
+
+## Summary
+Picked up from last session's blocker (ndim bug in mask aggregation, fixed).
+Spent the session fully resolving the mask-format question before writing
+any training code — turned out the 5-class assumption from last session was
+wrong. Ended with T4 runtime confirmed, dataset paired and loaded, model
+architecture initialized. No training run started yet.
+
+## Investigation: mask format (resolved)
+- Fixed the `ndim` bug: some masks are 2D grayscale, some are 3D RGB with
+  R=G=B — now branches correctly.
+- Re-ran the 200-mask value aggregation. Top values didn't cluster into 5
+  clean anchors as expected from the 5-class hypothesis (sea, oil spill,
+  look-alike, ship, land).
+- **Key diagnostic**: every non-endpoint value in the histogram paired up
+  to sum to 255 (9+246, 19+236, 29+226, 1+254, 39+216, 101+154, ...). That's
+  the signature of a binary mask (0/255) blended by antialiasing, not real
+  discrete class anchors.
+- Confirmed on a single file: `binary_equivalent` (pixels that are exactly
+  0 or 255) = **100%** of that mask.
+- Ran binary/mid-band check across 200 masks: binary-only fraction mean
+  ~98.9%, mid-band (40–215) fraction mean ~0.6%, with 34/200 masks showing
+  >1% mid-band pixels — so not *pure* antialiasing everywhere, worth
+  checking if that remainder was a real sparse class.
+- **Erosion test** on the 5 worst-offending masks (highest mid-band
+  fraction): 2px binary erosion left only 0.7–3.6% of mid-band pixels
+  surviving. A real class (ship, land) would leave a solid core; this
+  didn't — confirms it's just messier antialiasing on jagged spill
+  boundaries, not a hidden third class.
+- Checked for a PALSAR/Sentinel-1A polarity flip (spill-fraction gap in a
+  5-file sample looked suspicious) — per-source breakdown over 200 masks
+  showed PALSAR mean 0.213–0.222 vs. Sentinel mean 0.264–0.294, similar
+  medians and proportional >0.5 counts. Not a flip, just natural variance
+  in spill size across patches. No source-aware fix needed.
+- **Conclusion: this dataset (`bakhtiyar2222/deep-sar-oil-spill-segmentation-refined`,
+  Deep-SAR SOS) is binary (sea vs. spill), not 5-class.** The "refined"
+  Kaggle mirror doesn't carry ship/land/look-alike labels regardless of
+  what the original Krestenitis-style framing promised.
+
+## Decision: switched to binary segmentation
+- Model output changes from planned multiclass (5-class softmax) to binary
+  (single-channel logit + Dice loss). `docs/contract.md` doesn't need to
+  change — `SpillDetection` only ever needed one polygon per spill.
+- Pitch/narrative implication: dropping any claim about the DL model
+  distinguishing "look-alike" from real spills — that distinction isn't
+  in this dataset's labels. If it's needed for the pitch, the classical CV
+  module is the fallback, or swap to a genuinely multiclass source later
+  (a 2024 paper — Trujillo-Acatitla et al. — mirrors Krestenitis-style
+  labeled patches openly on Zenodo, no author request needed like the
+  original OSD dataset requires; not yet pulled, just flagged as a fallback).
+- Final remap: `arr >= 128` → binary (0 = sea, 1 = spill). Verified clean
+  `[0, 1]` output on sample files.
+
+## Setup completed (Colab)
+- Switched runtime to T4 GPU, confirmed `torch.cuda.is_available()` → True,
+  `Tesla T4`.
+- Re-downloaded dataset via kagglehub into fresh runtime — confirmed real
+  paths: `images/images/{train,val}/`, `masks/masks/{train,val}/`, already
+  split by the dataset itself (no manual split needed).
+- Wrote `SpillSegDataset` (torch Dataset) — loads image+mask pairs, applies
+  `remap_to_binary` on the fly, uses albumentations for augmentation
+  (h-flip, v-flip, random 90° rotation) + ImageNet normalization.
+- Wrote filename-based pairing function (`get_paired_files`) — matches
+  images↔masks by basename, warns on any unmatched files. Confirmed clean
+  pairing: **6455 train, 1615 val**, nothing dropped.
+- Initialized `DataLoader`s (batch size 16, 2 workers) for train/val.
+- Installed `segmentation_models_pytorch`, initialized U-Net with resnet18
+  encoder, ImageNet-pretrained weights, `classes=1` (binary), moved to
+  `cuda`. Loss: `DiceLoss(mode="binary")`. Optimizer: Adam, lr=1e-4.
+
+## Housekeeping
+- Kaggle API key pasted in plaintext during earlier setup — **still needs
+  rotating** on the Kaggle settings page, and should never get hardcoded
+  into a notebook cell that's committed to the repo. Not yet done.
+
+## Next session — pick up here
+1. Write the training loop (forward pass, loss, backward, optimizer step,
+   per-epoch train/val loss + a segmentation metric like IoU or Dice score).
+2. Pick epoch count / early stopping given Colab free-tier T4 time limits.
+3. Run first training pass, sanity-check loss is decreasing and predicted
+   masks look plausible (visualize a few val predictions).
+4. Export trained weights + write the inference function that turns a
+   model prediction into the `SpillDetection` JSON shape from
+   `docs/contract.md` (polygon extraction from binary mask — likely
+   `cv2.findContours` on the thresholded prediction, plus area/perimeter/
+   elongation/fragment_count calc).
+5. Rotate the exposed Kaggle API key.

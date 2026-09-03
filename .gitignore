@@ -1,0 +1,48 @@
+# Prerequisites
+*.py[cod]
+*$py.class
+__pycache__/
+.ipynb_checkpoints/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Frontend / React
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Model Weights
+*.pth
+*.pt
+best_unet_spill.pth
+
+# Data & Outputs
+# (Ignoring contents but keeping the directories if needed)
+data/ais_samples/*
+data/sar_images/*
+data/synthetic_ais/*
+outputs/*
+!data/ais_samples/.gitkeep
+!data/sar_images/.gitkeep
+!data/synthetic_ais/.gitkeep
+!outputs/.gitkeep
+
+# IDEs and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
