@@ -20,7 +20,7 @@ Run with:
 import json
 import sys
 from datetime import datetime
-
+from detection.estimate_age import estimate_spill_age
 from shapely.geometry import Polygon
 
 from detection.detect_spill import detect_spill
@@ -72,6 +72,7 @@ def _build_pipeline_output(detection, region_bounds):
         "polygon": spill_polygon_latlon,
         "detected_at": detection["detected_at"],
         "area_km2": detection["area_km2"],
+        "estimated_age": estimate_spill_age(detection["area_km2"]),
     }
 
     # ---- Drift (hindcast + forecast) ----
