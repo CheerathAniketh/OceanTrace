@@ -4,6 +4,8 @@
 Built for SIH 2026 — Problem Statement #26143 (National Technical Research Organisation, NTRO)
 Team Adamya
 
+Frontend built by [Karthik](https://github.com/karthikagarwal2075-hub), integrated into this repo.
+
 ## 1. Project Overview & Purpose
 
 OceanTrace is an automated pipeline that detects oil spills from SAR satellite imagery, reconstructs the spill's drift path backward (origin) and forward (forecast), and cross-references vessel AIS data to rank potential responsible vessels by spatio-temporal correlation. A web dashboard visualizes the full result on an interactive map.
@@ -20,54 +22,56 @@ The system is structured into four sequential stages, chained by a single orches
 - **Frontend Dashboard** (`frontend/`, React + Vite + react-leaflet) — Renders the spill polygon, drift paths, and ranked vessel tracks on an interactive map.
 
 ## 3. Project Folder Structure
+
+```
 OceanTrace/
 │
 ├── detection/
-│ ├── detect_spill.py # Standalone inference: SAR image → spill polygon
-│ ├── preprocess.py
-│ └── train_segmentation_dl.ipynb
+│   ├── detect_spill.py          # Standalone inference: SAR image → spill polygon
+│   ├── preprocess.py
+│   └── train_segmentation_dl.ipynb
 │
 ├── drift/
-│ ├── vector_field.py # Synthetic ocean current field
-│ ├── hindcast.py # Backward advection → origin point/time
-│ └── forecast.py # Forward advection → future path
+│   ├── vector_field.py          # Synthetic ocean current field
+│   ├── hindcast.py              # Backward advection → origin point/time
+│   └── forecast.py              # Forward advection → future path
 │
 ├── ais/
-│ ├── generate_synthetic.py # Synthetic vessel traffic generator
-│ ├── filter_traffic.py
-│ └── score_vessels.py # Proximity/trajectory/anomaly scoring
+│   ├── generate_synthetic.py    # Synthetic vessel traffic generator
+│   ├── filter_traffic.py
+│   └── score_vessels.py         # Proximity/trajectory/anomaly scoring
 │
 ├── pipeline/
-│ └── run_pipeline.py # Orchestrates detection → drift → AIS → contract JSON
+│   └── run_pipeline.py          # Orchestrates detection → drift → AIS → contract JSON
 │
 ├── api/
-│ ├── init.py
-│ └── main.py # FastAPI app, serves /api/spill-result
+│   ├── __init__.py
+│   └── main.py                  # FastAPI app, serves /api/spill-result
 │
 ├── frontend/
-│ ├── src/
-│ │ ├── App.jsx
-│ │ └── components/
-│ │ ├── MapView.jsx
-│ │ └── VesselRanking.jsx
-│ ├── package.json
-│ └── vite.config.js
+│   ├── src/
+│   │   ├── App.jsx
+│   │   └── components/
+│   │       ├── MapView.jsx
+│   │       └── VesselRanking.jsx
+│   ├── package.json
+│   └── vite.config.js
 │
 ├── data/
-│ ├── sar_images/ # Kaggle SAR dataset (images + masks)
-│ └── synthetic_ais/
+│   ├── sar_images/              # Kaggle SAR dataset (images + masks)
+│   └── synthetic_ais/
 │
 ├── outputs/
-│ └── pipeline_result.json # Latest pipeline run output
+│   └── pipeline_result.json     # Latest pipeline run output
 │
 ├── docs/
-│ ├── contract.md # JSON contract shared with frontend
-│ └── notes.md
+│   ├── contract.md              # JSON contract shared with frontend
+│   └── notes.md
 │
-├── best_unet_spill.pth # Trained detection model weights
+├── best_unet_spill.pth          # Trained detection model weights
 ├── requirements.txt
 └── README.md
-
+```
 
 ## 4. Quick Start (TL;DR)
 
