@@ -162,3 +162,135 @@ architecture initialized. No training run started yet.
    `cv2.findContours` on the thresholded prediction, plus area/perimeter/
    elongation/fragment_count calc).
 5. Rotate the exposed Kaggle API key.
+
+
+# OceanTrace — Project Context (SIH 2026)
+
+## Problem statement
+
+ID 26143, NTRO, theme Disaster Management: detect oil spills from satellite
+imagery (SAR), hindcast/forecast the slick's drift, and attribute the spill
+to a vessel using historic AIS data (score suspect vessels by proximity,
+trajectory, behavioral anomalies). Needs a visual interface.
+
+## Team & event
+
+- Team name: **Adamya** | Product name: **OceanTrace**
+- Team: Aniketh Cheerath (lead, backend/ML), Karthik Agarwal (frontend),
+  Rishikesh Vonteru, Uddavalu Thranoop, Akanksha Boga Ja, Arathi Jatoth
+  (non-technical: data curation, PPT narrative, demo testing, logistics)
+- College internal hackathon, Sept 10–11. Top 50 teams (out of the whole
+  college) announced 3 PM Sept 10, judged on both a PPT and a basic working
+  demo, then stay for a 36hr hackathon.
+- Real prep window: Sept 7 evening – Sept 10 morning (exams Aug 31–Sept 7,
+  with Sept 4 & 6 as holidays for planning/prep only).
+
+## Architecture
+
+```
+SAR image → detection/ → spill polygon
+                              ↓
+                          drift/ → origin window + forecast path
+                              ↓
+                          ais/ → ranked suspect vessels
+                              ↓
+                     pipeline/run_pipeline.py → JSON
+                              ↓
+                        frontend/ (dashboard)
+```
+
+## What's real vs. simulated (by design, for demo purposes)
+
+- **Detection**: real — trained on actual Sentinel-1 SAR imagery (see below)
+- **Drift (hindcast/forecast)**: simulated — simplified vector field, not
+  live oceanographic/meteorological data
+- **AIS attribution**: simulated — synthetic vessel tracks, since no real
+  AIS is matched to a real spill event
+
+## Detection model — status
+
+- Originally planned classical CV (Otsu thresholding) as a safe fallback,
+  but pivoted to a real trained model once a clean dataset was found.
+- Dataset: `bakhtiyar2222/deep-sar-oil-spill-segmentation-refined` on
+  Kaggle — 6455 train / 1615 val image-mask pairs, 256×256, sentinel +
+  palsar sources.
+- Found masks aren't clean binary (antialiasing noise at edges) —
+  remapped to binary at threshold 128.
+- Built PyTorch `SpillSegDataset` with albumentations augmentation.
+- Model: U-Net via `segmentation_models_pytorch`, ResNet18 encoder
+  (ImageNet pretrained), Dice loss, Adam @ lr=1e-4, training on Colab T4 GPU.
+- Training in progress as of last check: ~80s/epoch, 15 epochs planned
+  (~20 min total). Epoch 1 val_dice = 0.7825, epoch 2 val_dice = 0.7941,
+  both improving — good result, well above the 0.5 concern threshold.
+- Checkpoint saved as `best_unet_spill.pth` whenever val_dice improves.
+
+## Repo structure (OceanTrace)
+
+```
+ais/            filter_traffic.py, generate_synthetic.py, score_vessels.py
+data/           ais_samples/, sar_images/, synthetic_ais/ (gitignored)
+detection/      detect_spill.py, preprocess.py, train_segmentation_dl.ipynb,
+                test_detection.ipynb (classical CV, likely superseded now)
+docs/           architecture.md, contract.md, NOTES.md, pitch-narrative.md
+drift/          forecast.py, hindcast.py, vector_field.py
+frontend/       App.jsx, MapView.jsx, Timeline.jsx, VesselRanking.jsx
+outputs/        (gitignored, generated demo outputs)
+pipeline/       run_pipeline.py (orchestrates detection → drift → ais → JSON)
+README.md, requirements.txt
+```
+
+Files already written: `.gitignore`, `requirements.txt`, `README.md`,
+`docs/NOTES.md`, `docs/contract.md`.
+
+## Pipeline output contract (shared between backend and frontend)
+
+```json
+{
+  "spill": {
+    "polygon": [[lat, lon], "..."],
+    "detected_at": "ISO8601",
+    "area_km2": 0.0
+  },
+  "drift": {
+    "hindcast_path": [[lat, lon, "timestamp"], "..."],
+    "estimated_origin": {"lat": 0.0, "lon": 0.0, "time": "ISO8601"},
+    "forecast_path": [[lat, lon, "timestamp"], "..."]
+  },
+  "vessels": [
+    {
+      "vessel_id": "string", "name": "string", "score": 0.0,
+      "proximity_score": 0.0, "trajectory_score": 0.0,
+      "anomaly_score": 0.0, "track": [[lat, lon, "timestamp"], "..."]
+    }
+  ]
+}
+```
+
+Coordinates: `[lat, lon]`, decimal degrees. Timestamps: ISO 8601 UTC.
+`vessels` pre-sorted by `score` descending.
+
+## Ownership
+
+- Aniketh: detection, drift, AIS scoring (backend/ML core)
+- Karthik: frontend dashboard (separate repo, building against the
+  contract above with mock data, given a standalone `FRONTEND_BRIEF.md`)
+- Non-technical team: dataset/incident research, PPT narrative, demo
+  stress-testing, hackathon-day logistics
+
+## Phases
+
+- **Phase 0** (now–Sept 6): planning/prep, no coding pressure
+- **Phase 1** (Sept 7 eve–8): core detection pipeline, vertical slice
+  (image → polygon → map)
+- **Phase 2** (Sept 8 night–9): drift simulation + AIS scoring +
+  frontend integration
+- **Phase 3** (Sept 9 night–10 morning): polish, PPT, rehearse pitch
+
+## Not yet started
+
+- Drift simulation (`drift/` module — vector field, hindcast, forecast)
+- AIS synthetic data generation + vessel scoring (`ais/` module)
+- Inference script to go from trained model → spill polygon (contour
+  extraction from predicted mask)
+- `pipeline/run_pipeline.py` orchestration logic
+- PPT / pitch narrative content

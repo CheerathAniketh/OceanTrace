@@ -1,0 +1,15 @@
+numpy
+opencv-python
+Pillow
+matplotlib
+scikit-image
+geopandas
+shapely
+folium
+pandas
+rasterio
+torch
+torchvision
+segmentation-models-pytorch
+albumentations
+tqdm
