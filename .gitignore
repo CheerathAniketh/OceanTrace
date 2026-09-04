@@ -46,3 +46,16 @@ outputs/*
 .idea/
 .DS_Store
 Thumbs.db
+
+
+# Data & Outputs
+# (Ignoring contents but keeping the directories if needed)
+data/ais_samples/*
+data/sar_images/*
+data/synthetic_ais/*
+data/real_sar/*
+outputs/*
+!data/ais_samples/.gitkeep
+!data/sar_images/.gitkeep
+!data/synthetic_ais/.gitkeep
+!outputs/.gitkeep
