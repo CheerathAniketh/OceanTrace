@@ -105,6 +105,29 @@ def polygon_pixels_to_latlon(tiff_path: str, pixel_polygon: list):
     return list(zip(interp_lats.tolist(), interp_lons.tolist()))
 
 
+def get_window_bounds_latlon(tiff_path: str, row_off: int, col_off: int,
+                              height: int, width: int):
+    """
+    Given a pixel window (row_off, col_off, height, width) cropped out of
+    the real scene, returns that window's own real bounding box in
+    (min_lon, min_lat, max_lon, max_lat), interpolated from the scene's
+    GCPs at the window's four corners.
+
+    Use this after picking a crop for inference -- the crop needs its own
+    small bbox, not the whole scene's ~280km bbox.
+    """
+    corners_px = [
+        (row_off, col_off),
+        (row_off, col_off + width),
+        (row_off + height, col_off),
+        (row_off + height, col_off + width),
+    ]
+    corners_latlon = polygon_pixels_to_latlon(tiff_path, corners_px)
+    lats = [c[0] for c in corners_latlon]
+    lons = [c[1] for c in corners_latlon]
+    return (min(lons), min(lats), max(lons), max(lats))
+
+
 if __name__ == "__main__":
     bounds, gcp_crs, shape = get_scene_bounds()
     min_lon, min_lat, max_lon, max_lat = bounds
