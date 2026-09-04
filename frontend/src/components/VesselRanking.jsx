@@ -33,4 +33,5 @@ export default function VesselRanking({ vessels, selectedVesselId, onSelectVesse
       })}
     </div>
   );
+
 }
