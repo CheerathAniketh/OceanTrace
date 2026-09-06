@@ -1,6 +1,33 @@
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Polygon, Polyline, CircleMarker, useMap } from 'react-leaflet';
+import { useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, Polygon, Polyline, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
+
+function getCentroid(polygon) {
+  if (!polygon || polygon.length === 0) return [0, 0];
+  let latSum = 0;
+  let lngSum = 0;
+  polygon.forEach(([lat, lng]) => {
+    latSum += lat;
+    lngSum += lng;
+  });
+  return [latSum / polygon.length, lngSum / polygon.length];
+}
+
+const sonarBeaconIcon = L.divIcon({
+  className: 'custom-sonar-beacon-container',
+  html: `
+    <div class="sonar-beacon">
+      <div class="sonar-wave wave1"></div>
+      <div class="sonar-wave wave2"></div>
+      <div class="sonar-core">
+        <div class="sonar-dot"></div>
+      </div>
+      <div class="sonar-badge">SPILL ORIGIN</div>
+    </div>
+  `,
+  iconSize: [0, 0],
+  iconAnchor: [0, 0]
+});
 
 // Fits the map view to whatever data is actually on screen instead of a fixed zoom
 function FitBounds({ data, selectedVesselId }) {
@@ -41,10 +68,10 @@ function FitBounds({ data, selectedVesselId }) {
 }
 
 export default function MapView({ data, selectedVesselId }) {
-  const center = data.spill.polygon[0];
+  const spillCentroid = useMemo(() => getCentroid(data.spill.polygon), [data.spill.polygon]);
 
   return (
-    <MapContainer center={center} zoom={11} style={{ height: '100%', width: '100%', backgroundColor: '#050505' }} zoomControl={false}>
+    <MapContainer center={spillCentroid} zoom={11} style={{ height: '100%', width: '100%', backgroundColor: '#050505' }} zoomControl={false}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -53,12 +80,8 @@ export default function MapView({ data, selectedVesselId }) {
 
       <FitBounds data={data} selectedVesselId={selectedVesselId} />
 
-      {/* Radar Ping */}
-      <CircleMarker 
-        center={center} 
-        radius={20} 
-        pathOptions={{ stroke: false, className: 'radar-ping' }} 
-      />
+      {/* Tactical Sonar Beacon at Spill Centroid */}
+      <Marker position={spillCentroid} icon={sonarBeaconIcon} />
 
       {/* Spill Polygon */}
       <Polygon positions={data.spill.polygon} pathOptions={{ color: 'var(--accent-red)', fillColor: 'var(--accent-red)', fillOpacity: 0.15, weight: 2 }} />
