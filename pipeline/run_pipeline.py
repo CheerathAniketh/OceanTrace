@@ -161,13 +161,12 @@ if __name__ == "__main__":
     use_real = "--real" in sys.argv
 
     if use_real:
-        result = run_pipeline_real(detected_at="2026-09-08T14:00:00Z")
+        result = run_pipeline_real()
         out_path = "outputs/pipeline_result_real.json"
     else:
         result = run_pipeline(
             image_path="data/sar_images/images/palsar_101.png",
             spill_id="spill_demo_001",
-            detected_at="2026-09-08T14:00:00Z",
         )
         out_path = "outputs/pipeline_result.json"
 

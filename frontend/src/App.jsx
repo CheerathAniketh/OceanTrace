@@ -3,7 +3,7 @@ import MapView from './components/MapView';
 import VesselRanking from './components/VesselRanking';
 import './App.css';
 
-const API_URL = 'http://localhost:8000/api/spill-result';
+const API_URL = 'http://localhost:8000/api/spill-result?mode=real';
 
 function App() {
   const [data, setData] = useState(null);
