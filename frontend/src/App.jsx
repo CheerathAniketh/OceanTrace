@@ -7,17 +7,17 @@ import TimelineControls from './components/TimelineControls';
 import DossierPanel from './components/DossierPanel';
 import './App.css';
 
-import mockData from './mockData.json';
+const API_URL = 'http://localhost:8000/api/spill-result?mode=real';
 
 function App() {
   const [data, setData] = useState(null);
   const [selectedVesselId, setSelectedVesselId] = useState(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setData(mockData);
-    }, 500);
-    return () => clearTimeout(timer);
+    fetch(API_URL)
+      .then((res) => res.json())
+      .then((json) => setData(json))
+      .catch((err) => console.error('Failed to fetch spill data:', err));
   }, []);
 
   if (!data) return <div className="status-message">Loading spill data...</div>;

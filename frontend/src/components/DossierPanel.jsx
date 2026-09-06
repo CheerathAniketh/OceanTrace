@@ -31,28 +31,7 @@ export default function DossierPanel({ vessel, onClose }) {
       </div>
 
       <div className="dossier-grid">
-        {/* Profile */}
-        <div className="dossier-box">
-          <h3 className="box-title">VESSEL PROFILE</h3>
-          <div className="profile-row"><span>Type:</span> <span>Oil Tanker</span></div>
-          <div className="profile-row"><span>Flag:</span> <span>Panama</span></div>
-          <div className="profile-row"><span>Owner:</span> <span>Hydra Corp</span></div>
-        </div>
 
-        {/* Cargo */}
-        <div className="dossier-box">
-          <h3 className="box-title">CARGO DATA</h3>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '10px' }}>
-            <div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>1.2M</div>
-              <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>Barrels</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '1rem' }}>Light Crude</div>
-              <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>Grade</div>
-            </div>
-          </div>
-        </div>
 
         {/* Trajectory Analysis */}
         <div className="dossier-box full-width">

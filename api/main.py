@@ -9,7 +9,7 @@ app = FastAPI(title="OceanTrace API")
 # Allow Vite's dev server to call this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["*"], # Allow all for local dev (including localhost:5174)
     allow_methods=["*"],
     allow_headers=["*"],
 )
