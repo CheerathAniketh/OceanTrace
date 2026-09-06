@@ -19,12 +19,12 @@ Detecting a marine oil spill after the fact isn't enough — investigators also 
 
 OceanTrace is an automated pipeline that:
 
-1. **Detects** oil spills directly from SAR (Synthetic Aperture Radar) satellite imagery using a trained deep learning model
+1. **Detects** oil spills directly from SAR (Synthetic Aperture Radar) satellite imagery using a trained deep learning model, with a minimum area/confidence gate so low-confidence model noise isn't reported as a spill
 2. **Reconstructs drift** — simulates ocean current advection to hindcast the spill's origin and forecast its future spread
-3. **Attributes vessels** — cross-references AIS (ship-tracking) data near the estimated origin and ranks the most likely responsible vessel
+3. **Attributes vessels** — cross-references AIS (ship-tracking) data near the estimated origin and ranks the most likely responsible vessel among a realistic shipping-lane traffic scene
 4. **Visualizes** the full result — spill outline, drift paths, and ranked suspects — on an interactive map dashboard
 
-The pipeline runs on either a **synthetic demo image** or a **real, georeferenced Sentinel-1 satellite scene** — see [Section 7](#7-whats-real-vs-simulated).
+The pipeline runs on either a **synthetic demo image** or a **real, georeferenced Sentinel-1 satellite scene** — see [Section 8](#8-whats-real-vs-simulated).
 
 ## 3. System Architecture
 
@@ -33,6 +33,7 @@ SAR Satellite Image
         ↓
 ┌───────────────────┐
 │  DETECTION LAYER   │  U-Net (ResNet18 encoder) → spill polygon + geometry
+│                     │  + minimum area/confidence gate
 └───────────────────┘
         ↓
 ┌───────────────────┐
@@ -48,7 +49,7 @@ SAR Satellite Image
 └───────────────────┘
         ↓
 ┌───────────────────┐
-│  BACKEND API (FastAPI) │  Serves latest result over REST
+│  BACKEND API (FastAPI) │  Serves latest result over REST (synthetic/real mode)
 └───────────────────┘
         ↓
 ┌───────────────────┐
@@ -76,7 +77,7 @@ SAR Satellite Image
 OceanTrace/
 │
 ├── detection/
-│   ├── detect_spill.py              # Standalone inference: SAR image → spill polygon (synthetic path)
+│   ├── detect_spill.py              # Standalone inference: SAR image → spill polygon (synthetic path); area/confidence gate
 │   ├── run_real_inference.py        # Windowed real-scene read + preprocessing + inference (real path)
 │   ├── extract_geo.py               # Reads real lat/lon from Sentinel-1 GCPs
 │   ├── estimate_age.py              # Fay (1971) spreading-law age estimator — implemented, not yet wired into the pipeline (future scope)
@@ -89,7 +90,7 @@ OceanTrace/
 │   └── forecast.py                  # Forward advection → future path
 │
 ├── ais/
-│   ├── generate_synthetic.py        # Synthetic vessel traffic generator
+│   ├── generate_synthetic.py        # Synthetic vessel traffic generator (8 vessels, real heading/speed tracks)
 │   └── score_vessels.py             # Proximity/trajectory/anomaly scoring
 │
 ├── pipeline/
@@ -181,10 +182,10 @@ Transparency on data sources, since judges will ask:
 | Module | Real | Simulated |
 |---|---|---|
 | Detection model & training | Model, real Sentinel-1/PALSAR training pairs, inference, geometry math | — |
-| Detection (synthetic path) | Model, inference | Georeferencing (fixed placeholder region) |
-| Detection (real path) | Model, inference, **the input scene itself** (real Sentinel-1 GRD scene from NASA's ASF), **and georeferencing** (coordinates read from the scene's Ground Control Points) | — |
+| Detection (synthetic path) | Model, inference, minimum area/confidence gate | Georeferencing (fixed placeholder region) |
+| Detection (real path) | Model, inference, minimum area/confidence gate, **the input scene itself** (real Sentinel-1 GRD scene from NASA's ASF), **and georeferencing** (coordinates read from the scene's Ground Control Points) | — |
 | Drift | Advection physics (Euler integration) | Current vector field (illustrative, not from a live oceanographic feed) |
-| AIS | Scoring logic (haversine distance, trajectory matching, anomaly detection) | Vessel identities and tracks (fabricated; one scripted "suspect" for demo clarity) |
+| AIS | Scoring logic (haversine distance, trajectory matching, anomaly detection); realistic heading/speed-based traffic scene (8 vessels) | Vessel identities and tracks (fabricated; one scripted "suspect" for demo clarity) |
 
 The problem statement explicitly permits synthetic AIS data **"to demonstrate the functioning of the algorithm."**
 
@@ -203,7 +204,7 @@ Best checkpoint (by validation Dice, not final epoch) saved as `best_unet_spill.
 
 ## 10. Current Implementation Status
 
-**Backend:** feature-complete. Detection, drift, AIS, and pipeline orchestration are implemented and tested end to end, on both the synthetic demo path and a real Sentinel-1 scene. The API supports serving either result via a `mode` query parameter, and returns clean structured errors (not raw crashes) when a result file is unavailable.
+**Backend:** feature-complete. Detection, drift, AIS, and pipeline orchestration are implemented and tested end to end, on both the synthetic demo path and a real Sentinel-1 scene. Detection includes a minimum area/confidence gate to reject low-confidence model noise. The API supports serving either result via a `mode` query parameter, and returns clean structured errors (not raw crashes) when a result file is unavailable.
 
 **Frontend:** integrated and functional. Map rendering, auto-fit-bounds, spill/drift/vessel visualization, and vessel selection/highlighting confirmed working against real pipeline output.
 

@@ -90,7 +90,7 @@ def _build_pipeline_output(detection, region_bounds):
     # is a separate, not-yet-done piece -- see session notes / GFW).
     # region_bounds here just scopes WHERE synthetic vessels get placed,
     # so they cluster near the real spill location when using real detection.
-    vessels_raw = generate_synthetic_vessels(estimated_origin, region_bounds, n_vessels=4)
+    vessels_raw = generate_synthetic_vessels(estimated_origin, region_bounds, n_vessels=8)
     vessels_ranked = score_vessels(vessels_raw, estimated_origin)
 
     return {
