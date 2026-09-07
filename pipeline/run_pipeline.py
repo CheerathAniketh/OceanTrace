@@ -20,7 +20,6 @@ Run with:
 import json
 import sys
 from datetime import datetime
-from detection.estimate_age import estimate_spill_age
 from shapely.geometry import Polygon
 
 from detection.detect_spill import detect_spill
@@ -72,7 +71,6 @@ def _build_pipeline_output(detection, region_bounds):
         "polygon": spill_polygon_latlon,
         "detected_at": detection["detected_at"],
         "area_km2": detection["area_km2"],
-        "estimated_age": estimate_spill_age(detection["area_km2"]),
     }
 
     # ---- Drift (hindcast + forecast) ----
@@ -92,7 +90,7 @@ def _build_pipeline_output(detection, region_bounds):
     # is a separate, not-yet-done piece -- see session notes / GFW).
     # region_bounds here just scopes WHERE synthetic vessels get placed,
     # so they cluster near the real spill location when using real detection.
-    vessels_raw = generate_synthetic_vessels(estimated_origin, region_bounds, n_vessels=4)
+    vessels_raw = generate_synthetic_vessels(estimated_origin, region_bounds, n_vessels=8)
     vessels_ranked = score_vessels(vessels_raw, estimated_origin)
 
     return {
@@ -163,13 +161,12 @@ if __name__ == "__main__":
     use_real = "--real" in sys.argv
 
     if use_real:
-        result = run_pipeline_real(detected_at="2026-09-08T14:00:00Z")
+        result = run_pipeline_real()
         out_path = "outputs/pipeline_result_real.json"
     else:
         result = run_pipeline(
             image_path="data/sar_images/images/palsar_101.png",
             spill_id="spill_demo_001",
-            detected_at="2026-09-08T14:00:00Z",
         )
         out_path = "outputs/pipeline_result.json"
 

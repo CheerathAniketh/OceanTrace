@@ -27,7 +27,6 @@ INFERENCE_TRANSFORM = A.Compose([
 ])
 
 
-
 def load_model(checkpoint_path="best_unet_spill.pth", device=DEVICE):
     """Load the trained U-Net with weights from checkpoint_path."""
     model = smp.Unet(
@@ -98,6 +97,18 @@ def mask_to_spill_detection(binary_mask, prob, image_bounds, spill_id="spill_001
     px_area_km2 = area_px * (lon_km / w) * (lat_km / h)
     px_perim_km = perimeter_px * ((lon_km / w + lat_km / h) / 2)
 
+    confidence = float(prob[binary_mask == 1].mean()) if binary_mask.sum() > 0 else 0.0
+
+    # Minimum area/confidence gate -- a small, low-confidence contour is
+    # more likely model noise than a real spill. Reject it the same way
+    # "no contours found" is already handled (return None), so the
+    # pipeline's existing no-detection path handles this with zero new
+    # error-handling logic needed.
+    MIN_AREA_KM2 = 0.02
+    MIN_CONFIDENCE = 0.6
+    if px_area_km2 < MIN_AREA_KM2 or confidence < MIN_CONFIDENCE:
+        return None
+
     return {
         "spill_id": spill_id,
         "source_image": source_image,
@@ -108,7 +119,7 @@ def mask_to_spill_detection(binary_mask, prob, image_bounds, spill_id="spill_001
         "perimeter_km": round(float(px_perim_km), 2),
         "elongation": round(float(elongation), 2),
         "fragment_count": len(contours),
-        "confidence": float(prob[binary_mask == 1].mean()) if binary_mask.sum() > 0 else 0.0,
+        "confidence": round(confidence, 4),
     }
 
 

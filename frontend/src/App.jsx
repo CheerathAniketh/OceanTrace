@@ -3,21 +3,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import MapView from './components/MapView';
 import VesselRanking from './components/VesselRanking';
 import SpillAnalytics from './components/SpillAnalytics';
-import TimelineControls from './components/TimelineControls';
 import DossierPanel from './components/DossierPanel';
 import './App.css';
 
-import mockData from './mockData.json';
+const API_URL = 'http://localhost:8000/api/spill-result?mode=real';
 
 function App() {
   const [data, setData] = useState(null);
   const [selectedVesselId, setSelectedVesselId] = useState(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setData(mockData);
-    }, 500);
-    return () => clearTimeout(timer);
+    fetch(API_URL)
+      .then((res) => res.json())
+      .then((json) => setData(json))
+      .catch((err) => console.error('Failed to fetch spill data:', err));
   }, []);
 
   if (!data) return <div className="status-message">Loading spill data...</div>;
@@ -26,8 +25,11 @@ function App() {
 
   return (
     <div className="dashboard-container">
-      <div className="live-badge">EcoWave Analytics</div>
-      
+      <div className="live-badge">OceanTrace</div>
+      <div className="demo-mode-badge">
+        DEMO MODE · Synthetic AIS · Unconfirmed Detection
+      </div>
+
       {/* Map is background */}
       <motion.div 
         className="map-section"
@@ -78,16 +80,6 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
-      
-      {/* Timeline Panel */}
-      <motion.div
-        initial={{ y: 100, opacity: 0, x: '-50%' }}
-        animate={{ y: 0, opacity: 1, x: '-50%' }}
-        transition={{ delay: 0.4, type: 'spring', stiffness: 100 }}
-        style={{ position: 'absolute', bottom: 24, left: '50%' }}
-      >
-        <TimelineControls data={data} />
-      </motion.div>
     </div>
   );
 }

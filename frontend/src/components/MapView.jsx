@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Polygon, Polyline, Marker, useMap, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
@@ -14,7 +13,8 @@ function getCentroid(polygon) {
   return [latSum / polygon.length, lngSum / polygon.length];
 }
 
-const sonarBeaconIcon = L.divIcon({
+// Marker at the DETECTED spill location (from the satellite image itself)
+const spillDetectedIcon = L.divIcon({
   className: 'custom-sonar-beacon-container',
   html: `
     <div class="sonar-beacon">
@@ -30,9 +30,22 @@ const sonarBeaconIcon = L.divIcon({
   iconAnchor: [0, 0]
 });
 
+// Marker at the RECONSTRUCTED origin (from drift hindcasting) — a
+// distinct point from where the spill was actually detected.
+const estimatedOriginIcon = L.divIcon({
+  className: 'custom-origin-marker-container',
+  html: `
+    <div class="origin-marker">
+      <div class="origin-dot"></div>
+      <div class="origin-badge">ESTIMATED ORIGIN</div>
+    </div>
+  `,
+  iconSize: [0, 0],
+  iconAnchor: [0, 0]
+});
+
+
 // Fits the map view to whatever data is actually on screen instead of a fixed zoom
-
-
 function FitBounds({ data, selectedVesselId }) {
   const map = useMap();
 
@@ -44,7 +57,6 @@ function FitBounds({ data, selectedVesselId }) {
       const vessel = data.vessels.find(v => v.vessel_id === selectedVesselId);
       if (vessel) {
         points = vessel.track.map(p => [p[0], p[1]]);
-        // Shift map to the left so it isn't hidden under the DossierPanel
         paddingOptions = {
           paddingTopLeft: [50, 50],
           paddingBottomRight: [600, 50],
@@ -54,6 +66,7 @@ function FitBounds({ data, selectedVesselId }) {
     } else {
       points = [
         ...data.spill.polygon,
+        [data.drift.estimated_origin.lat, data.drift.estimated_origin.lon],
         ...data.drift.hindcast_path.map(p => [p[0], p[1]]),
         ...data.drift.forecast_path.map(p => [p[0], p[1]]),
         ...data.vessels.flatMap(v => v.track.map(p => [p[0], p[1]])),
@@ -72,6 +85,7 @@ function FitBounds({ data, selectedVesselId }) {
 
 export default function MapView({ data, selectedVesselId }) {
   const spillCentroid = useMemo(() => getCentroid(data.spill.polygon), [data.spill.polygon]);
+  const estimatedOrigin = [data.drift.estimated_origin.lat, data.drift.estimated_origin.lon];
 
   return (
     <MapContainer center={spillCentroid} zoom={11} style={{ height: '100%', width: '100%', backgroundColor: '#050505' }} zoomControl={false}>
@@ -83,8 +97,11 @@ export default function MapView({ data, selectedVesselId }) {
 
       <FitBounds data={data} selectedVesselId={selectedVesselId} />
 
-      {/* Tactical Sonar Beacon at Spill Centroid */}
-      <Marker position={spillCentroid} icon={sonarBeaconIcon} />
+      {/* Detected spill location (satellite imagery) */}
+      <Marker position={spillCentroid} icon={spillDetectedIcon} />
+
+      {/* Reconstructed origin (drift hindcast) — a distinct point */}
+      <Marker position={estimatedOrigin} icon={estimatedOriginIcon} />
 
       {/* Spill Polygon */}
       <Polygon positions={data.spill.polygon} pathOptions={{ color: 'var(--accent-red)', fillColor: '#1a110a', fillOpacity: 0.75, weight: 2 }} />

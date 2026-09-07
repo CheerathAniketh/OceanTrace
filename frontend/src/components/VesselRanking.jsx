@@ -16,6 +16,12 @@ const cardVariants = {
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
 };
 
+function trackedHours(track) {
+  const start = new Date(track[0][2]);
+  const end = new Date(track[track.length - 1][2]);
+  return Math.max(0, Math.round((end - start) / 3600000));
+}
+
 export default function VesselRanking({ vessels, selectedVesselId, onSelectVessel }) {
   const [showAll, setShowAll] = useState(false);
 
@@ -35,13 +41,15 @@ export default function VesselRanking({ vessels, selectedVesselId, onSelectVesse
         <h2 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Suspect Vessels</h2>
       </div>
       
-      {displayVessels.map((vessel, index) => {
+      {displayVessels.map((vessel) => {
         const isSelected = selectedVesselId === vessel.vessel_id;
         const totalScore = (vessel.score * 100).toFixed(0);
-        
+
+        // Chart now represents the SAME overall score shown as the
+        // headline number, not just anomaly_score, so the two match.
         const chartData = [
-          { name: 'Anomaly', value: vessel.anomaly_score * 100 },
-          { name: 'Normal', value: 100 - (vessel.anomaly_score * 100) }
+          { name: 'Suspicion', value: vessel.score * 100 },
+          { name: 'Remaining', value: 100 - (vessel.score * 100) }
         ];
         
         return (
@@ -60,12 +68,12 @@ export default function VesselRanking({ vessels, selectedVesselId, onSelectVesse
                 <span className="vessel-name">{vessel.name}</span>
               </div>
               <div className={`vessel-score ${totalScore > 75 ? 'high-risk' : 'med-risk'}`}>
-                {totalScore}
+                {totalScore}%
               </div>
             </div>
             
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-              IMO: {vessel.vessel_id}
+              Vessel ID: {vessel.vessel_id}
             </div>
 
             <div className="vessel-stats-container" style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -95,7 +103,7 @@ export default function VesselRanking({ vessels, selectedVesselId, onSelectVesse
                 <div className="vessel-indicators">
                   <div className="indicator">
                     <Activity size={12} className="icon-muted" />
-                    <span>{vessel.track.length} pings</span>
+                    <span>{trackedHours(vessel.track)}h tracked</span>
                   </div>
                   {vessel.anomaly_score > 0.5 && (
                     <div className="indicator warning">
