@@ -139,7 +139,7 @@ export default function MapView({ data, selectedVesselId }) {
             pathOptions={{ color: 'transparent', weight: 20 }}
           >
             <Tooltip sticky className="dark-tooltip">
-              Vessel Track: {vessel.vessel_name || vessel.vessel_id}
+              Vessel Track: {vessel.name || vessel.vessel_id}
             </Tooltip>
           </Polyline>
         ];
