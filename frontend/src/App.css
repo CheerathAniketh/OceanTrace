@@ -1,19 +1,232 @@
+@import './premium.css';
+
 .dashboard-container {
   display: flex;
   height: 100vh;
   width: 100vw;
+  background-color: var(--bg-color);
+  position: relative;
+  overflow: hidden;
+}
+
+/* CRT Scanline Overlay */
+.scanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.1)
+  );
+  background-size: 100% 4px;
+  pointer-events: none; /* Let clicks pass through */
+  z-index: 9999;
+  opacity: 0.3;
+}
+
+/* LIVE TRACKING Badge */
+.live-badge {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--accent-red);
+  color: var(--accent-red);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+}
+
+.live-badge::before {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  background-color: var(--accent-red);
+  border-radius: 50%;
+  animation: blink 1s infinite;
+  box-shadow: 0 0 10px var(--accent-red);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Animated Path (Ants Marching) */
+.animated-path {
+  stroke-dasharray: 10, 15 !important;
+  animation: march 2s linear infinite;
+}
+
+@keyframes march {
+  to {
+    stroke-dashoffset: -50;
+  }
+}
+
+/* Tactical Sonar Beacon */
+.custom-sonar-beacon-container {
+  background: transparent !important;
+  border: none !important;
+}
+
+.sonar-beacon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  height: 0;
+}
+
+.sonar-wave {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent-red);
+  box-shadow: 0 0 12px var(--accent-red);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+.sonar-wave.wave1 {
+  animation: sonar-ripple 2.8s infinite cubic-bezier(0.1, 0.8, 0.3, 1);
+}
+
+.sonar-wave.wave2 {
+  animation: sonar-ripple 2.8s infinite cubic-bezier(0.1, 0.8, 0.3, 1);
+  animation-delay: 1.4s;
+}
+
+@keyframes sonar-ripple {
+  0% {
+    width: 8px;
+    height: 8px;
+    opacity: 0.95;
+    border-width: 2px;
+  }
+  100% {
+    width: 110px;
+    height: 110px;
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+.sonar-core {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: rgba(239, 68, 68, 0.25);
+  border: 1.5px solid var(--accent-red);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+  z-index: 2;
+}
+
+.sonar-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-red);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-red);
+  animation: pulse-core 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-core {
+  from { transform: scale(0.8); opacity: 0.7; }
+  to { transform: scale(1.3); opacity: 1; }
+}
+
+.sonar-badge {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  background: rgba(10, 15, 30, 0.9);
+  border: 1px solid var(--accent-red);
+  color: var(--accent-red);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  z-index: 3;
+}
+
+/* Staggered Slide In for Cards */
+.slide-in-card {
+  opacity: 0;
+  animation: slideInRight 0.5s ease-out forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .map-section {
-  flex: 2;
+  flex: 1; /* Maps takes full available space */
   height: 100%;
 }
 
 .panel-section {
-  flex: 1;
-  height: 100%;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  bottom: 20px;
+  width: 400px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
   overflow-y: auto;
-  background: #f7f7f7;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000; /* Above the Leaflet map */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Custom scrollbar for the panel */
+.panel-section::-webkit-scrollbar {
+  width: 6px;
+}
+.panel-section::-webkit-scrollbar-track {
+  background: transparent;
+}
+.panel-section::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+.panel-section::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .status-message {
@@ -21,7 +234,14 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
-  font-family: sans-serif;
   font-size: 1.2rem;
-  color: #555;
+  color: var(--text-secondary);
+  background-color: var(--bg-color);
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }

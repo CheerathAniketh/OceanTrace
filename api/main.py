@@ -10,7 +10,7 @@ app = FastAPI(title="OceanTrace API")
 # Allow Vite dev server on localhost AND on LAN (e.g. demo laptop by IP)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # read-only public GET endpoint, fine for a hackathon demo
+    allow_origins=["*"],  # read-only public GET endpoint, fine for a hackathon demo (local dev + LAN)
     allow_methods=["*"],
     allow_headers=["*"],
 )
