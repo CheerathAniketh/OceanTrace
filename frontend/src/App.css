@@ -9,6 +9,31 @@
   overflow: hidden;
 }
 
+.origin-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(30px);
+}
+.origin-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-purple, #a855f7);
+  box-shadow: 0 0 8px var(--accent-purple, #a855f7);
+}
+.origin-badge {
+  margin-top: 6px;
+  background: rgba(0,0,0,0.7);
+  color: var(--accent-purple, #a855f7);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
 /* CRT Scanline Overlay */
 .scanlines {
   position: absolute;
@@ -24,7 +49,7 @@
     rgba(0, 0, 0, 0.1)
   );
   background-size: 100% 4px;
-  pointer-events: none; /* Let clicks pass through */
+  pointer-events: none;
   z-index: 9999;
   opacity: 0.3;
 }
@@ -64,6 +89,25 @@
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
+}
+
+/* DEMO MODE Badge */
+.demo-mode-badge {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: #facc15;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(250, 204, 21, 0.4);
+  z-index: 1000;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
 }
 
 /* Animated Path (Ants Marching) */
@@ -193,7 +237,7 @@
 }
 
 .map-section {
-  flex: 1; /* Maps takes full available space */
+  flex: 1;
   height: 100%;
 }
 
@@ -210,11 +254,10 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  z-index: 1000; /* Above the Leaflet map */
+  z-index: 1000;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-/* Custom scrollbar for the panel */
 .panel-section::-webkit-scrollbar {
   width: 6px;
 }
