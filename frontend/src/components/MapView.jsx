@@ -1,8 +1,44 @@
+<<<<<<< Updated upstream
 import { useEffect } from 'react';
 import { MapContainer, TileLayer, Polygon, Polyline, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
+=======
+import { useEffect, useMemo, useState } from 'react';
+import { MapContainer, TileLayer, Polygon, Polyline, Marker, useMap, Tooltip } from 'react-leaflet';
+import L from 'leaflet';
+
+function getCentroid(polygon) {
+  if (!polygon || polygon.length === 0) return [0, 0];
+  let latSum = 0;
+  let lngSum = 0;
+  polygon.forEach(([lat, lng]) => {
+    latSum += lat;
+    lngSum += lng;
+  });
+  return [latSum / polygon.length, lngSum / polygon.length];
+}
+
+const sonarBeaconIcon = L.divIcon({
+  className: 'custom-sonar-beacon-container',
+  html: `
+    <div class="sonar-beacon">
+      <div class="sonar-wave wave1"></div>
+      <div class="sonar-wave wave2"></div>
+      <div class="sonar-core">
+        <div class="sonar-dot"></div>
+      </div>
+      <div class="sonar-badge">SATELLITE DETECTION</div>
+    </div>
+  `,
+  iconSize: [0, 0],
+  iconAnchor: [0, 0]
+});
+
+>>>>>>> Stashed changes
 // Fits the map view to whatever data is actually on screen instead of a fixed zoom
+
+
 function FitBounds({ data, selectedVesselId }) {
   const map = useMap();
 
@@ -61,28 +97,45 @@ export default function MapView({ data, selectedVesselId }) {
       />
 
       {/* Spill Polygon */}
-      <Polygon positions={data.spill.polygon} pathOptions={{ color: 'var(--accent-red)', fillColor: 'var(--accent-red)', fillOpacity: 0.15, weight: 2 }} />
+      <Polygon positions={data.spill.polygon} pathOptions={{ color: 'var(--accent-red)', fillColor: '#1a110a', fillOpacity: 0.75, weight: 2 }} />
 
       {/* Hindcast Path (where it came from) */}
       <Polyline className="animated-path" positions={data.drift.hindcast_path.map(p => [p[0], p[1]])} pathOptions={{ color: 'var(--accent-blue)', dashArray: '5, 10', weight: 2 }} />
+      {/* Invisible thick line for easy tooltip hover */}
+      <Polyline positions={data.drift.hindcast_path.map(p => [p[0], p[1]])} pathOptions={{ color: 'transparent', weight: 20 }}>
+        <Tooltip sticky className="dark-tooltip">Hindcast Path (Spill Origin Tracker)</Tooltip>
+      </Polyline>
 
       {/* Forecast Path (where it is going) */}
       <Polyline className="animated-path" positions={data.drift.forecast_path.map(p => [p[0], p[1]])} pathOptions={{ color: 'var(--accent-purple)', dashArray: '5, 10', weight: 2 }} />
+      {/* Invisible thick line for easy tooltip hover */}
+      <Polyline positions={data.drift.forecast_path.map(p => [p[0], p[1]])} pathOptions={{ color: 'transparent', weight: 20 }}>
+        <Tooltip sticky className="dark-tooltip">Forecast Path (Future Drift Prediction)</Tooltip>
+      </Polyline>
 
       {/* Vessel Tracks */}
       {data.vessels.map((vessel) => {
         const isSelected = vessel.vessel_id === selectedVesselId;
-        return (
+        return [
           <Polyline
-            key={vessel.vessel_id}
+            key={`track-${vessel.vessel_id}`}
             positions={vessel.track.map(p => [p[0], p[1]])}
             pathOptions={{
               color: isSelected ? 'var(--accent-blue)' : 'rgba(255,255,255,0.2)',
               weight: isSelected ? 4 : 2,
               opacity: isSelected ? 1 : 0.6
             }}
-          />
-        );
+          />,
+          <Polyline
+            key={`hover-${vessel.vessel_id}`}
+            positions={vessel.track.map(p => [p[0], p[1]])}
+            pathOptions={{ color: 'transparent', weight: 20 }}
+          >
+            <Tooltip sticky className="dark-tooltip">
+              Vessel Track: {vessel.vessel_name || vessel.vessel_id}
+            </Tooltip>
+          </Polyline>
+        ];
       })}
     </MapContainer>
   );
