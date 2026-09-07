@@ -1,9 +1,4 @@
-<<<<<<< Updated upstream
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Polygon, Polyline, CircleMarker, useMap } from 'react-leaflet';
-import L from 'leaflet';
 
-=======
 import { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Polygon, Polyline, Marker, useMap, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
@@ -35,7 +30,6 @@ const sonarBeaconIcon = L.divIcon({
   iconAnchor: [0, 0]
 });
 
->>>>>>> Stashed changes
 // Fits the map view to whatever data is actually on screen instead of a fixed zoom
 
 
@@ -77,10 +71,10 @@ function FitBounds({ data, selectedVesselId }) {
 }
 
 export default function MapView({ data, selectedVesselId }) {
-  const center = data.spill.polygon[0];
+  const spillCentroid = useMemo(() => getCentroid(data.spill.polygon), [data.spill.polygon]);
 
   return (
-    <MapContainer center={center} zoom={11} style={{ height: '100%', width: '100%', backgroundColor: '#050505' }} zoomControl={false}>
+    <MapContainer center={spillCentroid} zoom={11} style={{ height: '100%', width: '100%', backgroundColor: '#050505' }} zoomControl={false}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -89,12 +83,8 @@ export default function MapView({ data, selectedVesselId }) {
 
       <FitBounds data={data} selectedVesselId={selectedVesselId} />
 
-      {/* Radar Ping */}
-      <CircleMarker 
-        center={center} 
-        radius={20} 
-        pathOptions={{ stroke: false, className: 'radar-ping' }} 
-      />
+      {/* Tactical Sonar Beacon at Spill Centroid */}
+      <Marker position={spillCentroid} icon={sonarBeaconIcon} />
 
       {/* Spill Polygon */}
       <Polygon positions={data.spill.polygon} pathOptions={{ color: 'var(--accent-red)', fillColor: '#1a110a', fillOpacity: 0.75, weight: 2 }} />
