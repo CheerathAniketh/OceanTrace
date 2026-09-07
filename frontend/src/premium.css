@@ -10,6 +10,31 @@
   z-index: 1000;
 }
 
+.origin-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.origin-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-purple, #a855f7);
+  box-shadow: 0 0 8px var(--accent-purple, #a855f7);
+}
+.origin-badge {
+  margin-top: 6px;
+  background: rgba(0,0,0,0.7);
+  color: var(--accent-purple, #a855f7);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+
 /* Left Analytics Widget */
 .analytics-widget {
   position: absolute;
@@ -170,9 +195,7 @@
   padding: 0 24px 24px;
 }
 
-.vessel-card-container {
-  /* Used as layout wrapper for framer motion */
-}
+
 
 .vessel-card {
   background: rgba(255, 255, 255, 0.03);
