@@ -1,4 +1,3 @@
-
 @import './premium.css';
 
 .dashboard-container {
@@ -61,11 +60,23 @@
   opacity: 0.3;
 }
 
-/* LIVE TRACKING Badge */
-.live-badge {
+/* Top-left status row — groups the live + demo-mode badges together
+   so they never overlap the right-hand panel, regardless of viewport
+   width or which panel (ranking vs dossier) is open. */
+.status-bar {
   position: absolute;
   top: 20px;
   left: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100vw - 460px); /* leaves room for the 400px+ right panel */
+  flex-wrap: wrap;
+}
+
+/* LIVE TRACKING Badge */
+.live-badge {
   background: rgba(239, 68, 68, 0.15);
   border: 1px solid var(--accent-red);
   color: var(--accent-red);
@@ -74,12 +85,12 @@
   font-weight: 700;
   font-size: 0.85rem;
   letter-spacing: 2px;
-  z-index: 1000;
   display: flex;
   align-items: center;
   gap: 8px;
   text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
   box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+  white-space: nowrap;
 }
 
 .live-badge::before {
@@ -100,10 +111,6 @@
 
 /* DEMO MODE Badge */
 .demo-mode-badge {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.6);
   color: #facc15;
   font-size: 0.7rem;
@@ -112,9 +119,9 @@
   padding: 6px 14px;
   border-radius: 20px;
   border: 1px solid rgba(250, 204, 21, 0.4);
-  z-index: 1000;
   pointer-events: none;
   backdrop-filter: blur(6px);
+  white-space: nowrap;
 }
 
 /* Animated Path (Ants Marching) */
@@ -307,4 +314,3 @@
   50% { opacity: 1; }
   100% { opacity: 0.6; }
 }
-

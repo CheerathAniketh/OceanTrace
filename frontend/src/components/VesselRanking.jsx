@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Target, Activity, ShieldAlert, Navigation } from 'lucide-react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
+import { riskTier } from '../utils/riskTier';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -43,9 +44,10 @@ export default function VesselRanking({ vessels, selectedVesselId, onSelectVesse
       
       {displayVessels.map((vessel) => {
         const isSelected = selectedVesselId === vessel.vessel_id;
-        const totalScore = (vessel.score * 100).toFixed(0);
+        const totalScore = Number((vessel.score * 100).toFixed(0));
+        const tier = riskTier(totalScore);
 
-        // Chart now represents the SAME overall score shown as the
+        // Chart represents the SAME overall score shown as the
         // headline number, not just anomaly_score, so the two match.
         const chartData = [
           { name: 'Suspicion', value: vessel.score * 100 },
@@ -67,7 +69,7 @@ export default function VesselRanking({ vessels, selectedVesselId, onSelectVesse
                 <Navigation size={16} className={isSelected ? 'icon-accent-blue' : 'icon-muted'} />
                 <span className="vessel-name">{vessel.name}</span>
               </div>
-              <div className={`vessel-score ${totalScore > 75 ? 'high-risk' : 'med-risk'}`}>
+              <div className={`vessel-score ${tier.label}`}>
                 {totalScore}%
               </div>
             </div>
@@ -77,7 +79,7 @@ export default function VesselRanking({ vessels, selectedVesselId, onSelectVesse
             </div>
 
             <div className="vessel-stats-container" style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <div style={{ width: '60px', height: '60px' }}>
+              <div style={{ width: '60px', height: '60px', position: 'relative', flexShrink: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -91,12 +93,27 @@ export default function VesselRanking({ vessels, selectedVesselId, onSelectVesse
                       dataKey="value"
                       stroke="none"
                     >
-                      <Cell fill={chartData[0].value > 50 ? 'var(--accent-red)' : 'var(--accent-blue)'} />
-                      <Cell fill="#e2e8f0" />
+                      <Cell fill={tier.color} />
+                      <Cell fill="#2a2a2a" />
                     </Pie>
-                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    
                   </PieChart>
                 </ResponsiveContainer>
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    color: tier.color,
+                    pointerEvents: 'none',
+                  }}
+                >
+                  {totalScore}%
+                </div>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>

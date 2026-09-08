@@ -18,7 +18,7 @@ from datetime import timedelta
 VESSEL_NAMES = [
     "MV Kalindi Star", "MT Ocean Pearl", "SS Coral Voyager",
     "MV Sagar Ratna", "MT Indus Trader", "MV Konkan Queen",
-    "SS Malabar Wind", "MV Ratnagiri Express", "MT Ganga Mariner",
+    "SS Malabar Wind", "MV Ratnagiri Voyager", "MT Ganga Mariner",
     "MV Sindhu Prakash", "SS Coastal Falcon", "MV Deccan Voyager",
 ]
 

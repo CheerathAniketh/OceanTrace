@@ -128,7 +128,7 @@ export default function MapView({ data, selectedVesselId }) {
             key={`track-${vessel.vessel_id}`}
             positions={vessel.track.map(p => [p[0], p[1]])}
             pathOptions={{
-              color: isSelected ? 'var(--accent-blue)' : 'rgba(255,255,255,0.2)',
+              color: isSelected ? 'var(--accent-blue)' : 'rgba(30, 41, 59, 0.65)',
               weight: isSelected ? 4 : 2,
               opacity: isSelected ? 1 : 0.6
             }}

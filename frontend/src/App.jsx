@@ -7,6 +7,7 @@ import DossierPanel from './components/DossierPanel';
 import './App.css';
 
 const API_URL = 'http://localhost:8000/api/spill-result?mode=real';
+const APP_NAME = 'OceanTrace';
 
 function App() {
   const [data, setData] = useState(null);
@@ -25,9 +26,12 @@ function App() {
 
   return (
     <div className="dashboard-container">
-      <div className="live-badge">OceanTrace</div>
-      <div className="demo-mode-badge">
-        DEMO MODE · Synthetic AIS · Unconfirmed Detection
+      {/* Grouped top-left status row — keeps the right panel clear */}
+      <div className="status-bar">
+        <div className="live-badge">{APP_NAME}</div>
+        <div className="demo-mode-badge">
+          DEMO MODE · Synthetic AIS · Unconfirmed Detection
+        </div>
       </div>
 
       {/* Map is background */}
@@ -69,7 +73,7 @@ function App() {
           >
             <div style={{ padding: '24px 24px 10px 24px', borderBottom: '1px solid var(--panel-border)' }}>
               <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, letterSpacing: '0.5px' }}>
-                OCEAN_TRACE v2.4
+                {APP_NAME}
               </h1>
             </div>
             <VesselRanking
