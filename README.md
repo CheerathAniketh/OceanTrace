@@ -1,14 +1,14 @@
 # OceanTrace
 **Automated Marine Oil Spill Detection & Vessel Attribution**
 
-Detect oil spills from satellite imagery in real time, hindcast their origin, and identify responsible vessels through AIS cross-reference. Built for SIH 2026 (National Technical Research Organisation problem statement #26143).
+Detect oil spills from satellite imagery, hindcast their origin, and identify responsible vessels through AIS cross-reference. Started as a Smart India Hackathon 2026 entry (National Technical Research Organisation problem statement #26143).
 
 ---
 
 ## Problem
 Marine oil spills are environmental disasters. Current response is reactive—spills are spotted days after they occur. By then, the source has dispersed and responsible parties are hard to trace. Environmental agencies need rapid detection, drift forecasting, and vessel attribution to enforce accountability.
 
-## Our Solution
+## Approach
 OceanTrace automates the entire pipeline end-to-end:
 
 1. **Detects** oil spills from Sentinel-1 SAR satellite imagery using a trained deep learning model (Dice: 0.826)
@@ -22,10 +22,9 @@ All three layers work on either synthetic demo data or real Sentinel-1 satellite
 
 ## Results
 - ✅ **Detection model** — Dice: 0.826, IoU: 0.731 (trained on 6,455 real Sentinel-1/PALSAR image-mask pairs)
-- ✅ **Real-data pipeline** — tested against live Sentinel-1 GRD scenes from NASA ASF
+- ✅ **Real-data pipeline** — run end to end on a real Sentinel-1 GRD scene from NASA ASF
 - ✅ **End-to-end** — detection + drift hindcast + AIS attribution working on both synthetic and real data
 - ✅ **Interactive dashboard** — map rendering, auto-fit-bounds, vessel ranking, spill visualization
-- 🎯 **SIH 2026 ready** — deployed and validated, real government agency judging
 
 ---
 
@@ -60,6 +59,8 @@ npm install
 npm run dev
 # Visit http://localhost:5173
 ```
+
+> **Not included in the repo:** the trained weights (`best_unet_spill.pth`) and all SAR data are gitignored because of their size. To reproduce the weights, train with `detection/train_segmentation_dl_ipynb.ipynb` on the Kaggle SAR image-mask dataset and place the file in the repo root. The detection step does not run without it.
 
 ---
 
@@ -143,7 +144,7 @@ Sentinel-1 SAR Image (Real or Synthetic)
 │  VISUALIZATION LAYER                │
 │  FastAPI backend + React/Leaflet    │
 │  → Interactive spill/drift/vessel    │
-│  → Real-time updates                 │
+│  → Served over REST                  │
 └─────────────────────────────────────┘
 ```
 
@@ -166,12 +167,13 @@ Checkpoint selected by validation Dice (not final epoch). Inference validated ag
 ## What's Real vs. Synthetic (Transparency)
 The SIH problem statement explicitly permits synthetic AIS data to demonstrate algorithmic functionality.
 
-| Module | Real | Synthetic |
-|--------|------|-----------|
-| **Detection model** | ✅ Real Sentinel-1/PALSAR training data | ✅ Real model weights |
-| **Detection inference** | ✅ Real U-Net architecture | ✅ Real inference on real images |
-| **Drift physics** | ✅ Euler advection (physically-accurate) | Ocean current field (illustrative, not live data) |
-| **AIS** | ✅ Scoring logic (haversine, trajectory, anomaly) | Vessel identities + tracks (fabricated for demo clarity) |
+| Module | Real | Simulated |
+|---|---|---|
+| Detection model & training | Model, real Sentinel-1/PALSAR training pairs, inference, geometry math | — |
+| Detection (synthetic path) | Model, inference, minimum area/confidence gate | Georeferencing (fixed placeholder region) |
+| Detection (real path) | Model, inference, gate, the input scene (Sentinel-1 GRD from NASA ASF), and georeferencing from the scene's Ground Control Points | — |
+| Drift | Advection physics (Euler integration) | Current vector field (illustrative, not from a live oceanographic feed) |
+| AIS | Scoring logic (haversine, trajectory, anomaly); heading/speed-based traffic scene (8 vessels) | Vessel identities and tracks (fabricated; one scripted "suspect" for demo clarity) |
 
 **Key note:** The Sentinel-1 scene used for real-path validation contains no confirmed real spill event. Detections demonstrate end-to-end real-data pipeline correctness, not evidence of an actual spill.
 
@@ -198,7 +200,7 @@ Multi-criteria ranking:
 ## Validation
 - ✅ Detection model trained and validated on real SAR data (Dice: 0.826)
 - ✅ Real Sentinel-1 inference tested end-to-end (georeferencing + detection verified)
-- ✅ Drift simulation (Euler integration) validated against oceanographic principles
+- ✅ Drift simulation implemented with Euler integration over an illustrative current field (not validated against real oceanographic data)
 - ✅ AIS scoring logic tested on synthetic realistic vessel traffic (8 vessels, real heading/speed patterns)
 - ✅ Frontend rendering verified against real pipeline JSON output (React + Leaflet rendering live data)
 
@@ -249,15 +251,7 @@ OceanTrace/
     └── real_sar/         # Real Sentinel-1 scenes (real path)
 ```
 
-See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed architecture and implementation notes.
-
----
-
-## Performance
-- **Detection inference** — ~500ms per SAR image (on GPU)
-- **Drift simulation** — ~100ms (NumPy Euler integration)
-- **AIS scoring** — ~50ms (8 vessels)
-- **Full pipeline** — ~2s end-to-end
+See [docs/contract.md](./docs/contract.md) for the JSON contract between the pipeline and the frontend.
 
 ---
 
@@ -274,11 +268,6 @@ See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed architecture and implementat
 **Karthik Agarwal** — Frontend (React, Leaflet, UI/UX)
 
 **Team Adamya** — SIH 2026 submission
-
----
-
-## License
-MIT (open source)
 
 ---
 
