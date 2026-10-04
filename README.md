@@ -2,8 +2,7 @@
 
 ### AI-Assisted Marine Oil Spill Detection & Vessel Attribution Pipeline
 
-**Built for SIH 2026 — Problem Statement #26143 (National Technical Research Organisation, NTRO)**
-**Team Adamya**
+Started as a Smart India Hackathon 2026 entry (Problem Statement #26143, National Technical Research Organisation), built by Team Adamya.
 
 `Python` `PyTorch` `FastAPI` `React` `Leaflet` `Sentinel-1 SAR`
 
@@ -11,11 +10,11 @@ Frontend built by [Karthik](https://github.com/karthikagarwal2075-hub), integrat
 
 ---
 
-## 1. Problem Statement
+## 1. Problem
 
 Detecting a marine oil spill after the fact isn't enough — investigators also need to know **where it came from** and **who's responsible**. Manually reconstructing a spill's drift path and cross-referencing vessel traffic is slow, while oil spreads and evidence degrades in the meantime.
 
-## 2. Our Solution
+## 2. Approach
 
 OceanTrace is an automated pipeline that:
 
@@ -81,8 +80,7 @@ OceanTrace/
 │   ├── run_real_inference.py        # Windowed real-scene read + preprocessing + inference (real path)
 │   ├── extract_geo.py               # Reads real lat/lon from Sentinel-1 GCPs
 │   ├── estimate_age.py              # Fay (1971) spreading-law age estimator — implemented, not yet wired into the pipeline (future scope)
-│   ├── train_segmentation_dl_ipynb.ipynb   # Model training notebook
-│   └── test_detection.ipynb
+│   └── train_segmentation_dl_ipynb.ipynb   # Model training notebook
 │
 ├── drift/
 │   ├── vector_field.py              # Synthetic ocean current field
@@ -105,7 +103,9 @@ OceanTrace/
 │   │   ├── App.jsx
 │   │   └── components/
 │   │       ├── MapView.jsx
-│   │       └── VesselRanking.jsx
+│   │       ├── VesselRanking.jsx
+│   │       ├── DossierPanel.jsx
+│   │       └── SpillAnalytics.jsx
 │   ├── package.json
 │   └── vite.config.js
 │
@@ -133,6 +133,8 @@ OceanTrace/
 - Python 3.12 (3.14 not recommended — known multiprocessing/reload incompatibility with uvicorn)
 - Node.js 22.x + npm
 - ~2GB free disk for the SAR dataset + model weights (add ~1GB more for a real Sentinel-1 scene)
+
+> **Not included in the repo:** the trained weights (`best_unet_spill.pth`) and all SAR data are gitignored because of their size. To reproduce the weights, train with `detection/train_segmentation_dl_ipynb.ipynb` on the Kaggle SAR image-mask dataset and place the file in the repo root. The detection step does not run without it.
 
 ### 1. Backend Setup
 
@@ -177,7 +179,7 @@ Open **http://localhost:5173** in your browser.
 
 ## 8. What's Real vs. Simulated
 
-Transparency on data sources, since judges will ask:
+Which parts of the pipeline use real data and which are simulated:
 
 | Module | Real | Simulated |
 |---|---|---|
