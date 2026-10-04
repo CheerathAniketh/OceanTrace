@@ -1,7 +1,7 @@
 # OceanTrace
 **Automated Marine Oil Spill Detection & Vessel Attribution**
 
-Detect oil spills from satellite imagery, hindcast their origin, and identify responsible vessels through AIS cross-reference. Started as a Smart India Hackathon 2026 entry (National Technical Research Organisation problem statement #26143).
+Detect oil spills from satellite imagery, hindcast their origin, and identify responsible vessels through AIS cross-reference.
 
 ---
 
@@ -165,7 +165,7 @@ Checkpoint selected by validation Dice (not final epoch). Inference validated ag
 ---
 
 ## What's Real vs. Synthetic (Transparency)
-The SIH problem statement explicitly permits synthetic AIS data to demonstrate algorithmic functionality.
+AIS data is synthetic; integrating a real AIS feed is listed under Future Scope.
 
 | Module | Real | Simulated |
 |---|---|---|
@@ -267,13 +267,11 @@ See [docs/contract.md](./docs/contract.md) for the JSON contract between the pip
 **Aniketh Cheerath** — Pipeline, detection model, backend (FastAPI, drift, AIS)  
 **Karthik Agarwal** — Frontend (React, Leaflet, UI/UX)
 
-**Team Adamya** — SIH 2026 submission
 
 ---
 
 ## Links
 - **GitHub:** github.com/CheerathAniketh/OceanTrace
-- **SIH 2026:** Smart India Hackathon (NTRO problem statement #26143)
 - **LinkedIn:** linkedin.com/in/cheerathaniketh
 
 ---
@@ -282,3 +280,7 @@ See [docs/contract.md](./docs/contract.md) for the JSON contract between the pip
 - Fay, J. A. (1971). Physical processes in the spread of oil on ocean surface.
 - NASA ASF — Sentinel-1 data archive
 - Kaggle SAR image-mask dataset
+
+---
+
+Made for Smart India Hackathon 2026 (NTRO problem statement #26143) by Team Adamya.
